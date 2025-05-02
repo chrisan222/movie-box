@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Shower</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- General Styles --- */
+        html { scroll-behavior: smooth; }
+        body {
+            background: linear-gradient(135deg, #4e73df, #1e3a8a);
+            background-size: cover;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: sans-serif; /* Basic font */
+        }
+        main {
+            flex-grow: 1;
+        }
+
+        /* Blue Flame Effect */
+        .blue-flame {
+            background: linear-gradient(90deg, #3b82f6, #1e3a8a, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: flameGlow 2s ease-in-out infinite;
+        }
+        @keyframes flameGlow {
+            0%, 100% { text-shadow: 0 0 5px #3b82f6, 0 0 10px #1e3a8a, 0 0 20px #22d3ee; }
+            50% { text-shadow: 0 0 15px #60a5fa, 0 0 25px #2563eb, 0 0 35px #67e8f9; }
+        }
+
+        /* --- Header & Sidebar --- */
+        header { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); }
+        #sidebar {
+            background: linear-gradient(135deg, #4e73df, #1e3a8a);
+            color: white;
+        }
+        #sidebar ul a:hover { color: #e0f2fe; } /* Lighter blue on hover */
+
+        /* --- Sign In Form --- */
+        .sign-in-form {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); width: 320px;
+        }
+        .sign-in-form input, .sign-in-form select, .sign-in-form button {
+            width: 100%; padding: 0.8rem; margin-bottom: 0.75rem;
+            border-radius: 6px; border: 1px solid #ccc; color: #333;
+        }
+        .sign-in-form button {
+            background-color: #3b82f6; color: white; cursor: pointer;
+            font-weight: bold; transition: background-color 0.3s; border: none;
+        }
+        .sign-in-form button:hover { background-color: #2563eb; }
+        .sign-in-header {
+            font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;
+            text-align: center; color: #1e3a8a; /* Dark blue header */
+        }
+
+        /* --- Category Buttons --- */
+        .category-buttons {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 0.75rem; margin-bottom: 2rem; padding: 0 1rem;
+        }
+        .category-button {
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 0.6rem 1.1rem; border-radius: 15px; cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s; font-weight: 600;
+            color: #1e3a8a; border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .category-button:hover { background-color: rgba(255, 255, 255, 0.9); transform: translateY(-2px); }
+        .category-button.active {
+            background-color: #fff; color: #1e3a8a; font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); transform: translateY(-1px);
+        }
+
+        /* --- Search Bar --- */
+        .search-bar-container {
+            display: flex; justify-content: center; padding: 0 1.5rem; margin-top: 2rem;
+        }
+        .search-bar {
+            width: 100%; max-width: 500px; padding: 0.85rem; border-radius: 20px; /* Rounded */
+            border: 1px solid #ddd; background-color: rgba(255, 255, 255, 0.9);
+            color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .search-bar::placeholder { color: #666; }
+
+        /* --- Movie Grid & Cards --- */
+        .movies-section {
+            margin-top: 2rem; padding: 2rem;
+            background: rgba(0, 0, 0, 0.5); border-radius: 12px; /* More rounded */
+            margin-left: 1.5rem; margin-right: 1.5rem;
+        }
+        .movies-section h2 {
+            font-size: 2rem; font-weight: bold; margin-bottom: 1.5rem;
+            text-align: center; color: #fff;
+        }
+        #movieGrid {
+            display: grid; gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Responsive grid */
+        }
+        .movie-card {
+            transition: transform 0.3s, box-shadow 0.3s; background: #fff;
+            border-radius: 8px; overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); color: #333;
+            display: flex; flex-direction: column;
+        }
+        .movie-card:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
+        /* Ensure image tag takes up space even if src is Base64 */
+        .movie-card img {
+            width: 100%; height: 250px; object-fit: cover; display: block;
+            background-color: #eee; /* Placeholder background */
+         }
+        .movie-card h3 {
+            padding: 0.8rem 1rem 0.5rem 1rem; font-size: 1rem; font-weight: bold;
+             color: #333; flex-grow: 1; min-height: 40px; line-height: 1.3;
+        }
+        .movie-card a {
+            padding: 0.75rem 1rem; display: block; text-align: center;
+            background-color: #4e73df; color: #fff; font-weight: bold;
+            text-decoration: none; transition: background-color 0.3s; margin-top: auto;
+            font-size: 0.9rem;
+        }
+        .movie-card a:hover { background-color: #1e3a8a; }
+
+        /* --- Admin Section --- */
+        #adminSection {
+            display: none; /* Hidden by default */
+            margin: 2rem 1.5rem; padding: 2rem;
+            background-color: rgba(30, 41, 59, 0.9); /* Dark slate background */
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            max-width: 600px; /* Limit width */
+            margin-left: auto; /* Center it */
+            margin-right: auto; /* Center it */
+            position: relative; /* Needed for absolute positioning of close button */
+        }
+        .admin-form label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #cbd5e1; }
+        .admin-form input[type="text"],
+        .admin-form input[type="url"], /* Keep URL styling for Watch Link */
+        .admin-form select,
+        .admin-form button {
+            width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 6px;
+            border: 1px solid #4b5563; background-color: #374151; color: white;
+        }
+        /* Style file input differently */
+         .admin-form input[type="file"] {
+            width: 100%; margin-bottom: 1rem; border-radius: 6px;
+            border: 1px solid #4b5563; color: white;
+             padding: 0.5rem; /* Adjust padding */
+             background-color: #4b5563; /* Slightly different background */
+             cursor: pointer;
+        }
+         /* Style the file input button pseudo-element (browser-specific) */
+        .admin-form input[type="file"]::file-selector-button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 1rem;
+             transition: background-color 0.3s;
+        }
+        .admin-form input[type="file"]::file-selector-button:hover {
+             background-color: #2563eb;
+        }
+
+        .admin-form input::placeholder { color: #9ca3af; }
+        .admin-form select { appearance: none; }
+        .admin-form button {
+            background-color: #3b82f6; color: white; cursor: pointer; font-weight: bold;
+            transition: background-color 0.3s; border: none; margin-top: 0.5rem;
+        }
+        .admin-form button:hover { background-color: #2563eb; }
+        .admin-close-button {
+            background-color: #ef4444; /* Red */
+            color: white; padding: 0.3rem 0.8rem; border-radius: 50%; /* Circle */
+             border: none; cursor: pointer;
+             position: absolute; /* Position relative to adminSection */
+             top: 1rem; right: 1rem;
+             font-size: 1.2rem; line-height: 1; /* Center the 'X' */
+             font-weight: bold; z-index: 10; /* Ensure it's above form elements */
+        }
+         .admin-close-button:hover { background-color: #dc2626; }
+
+
+        /* --- Footer --- */
+        footer {
+            text-align: center; text-sm text-gray-300; padding: 1.5rem; margin-top: 2rem;
+            background-color: rgba(0, 0, 0, 0.4); /* Slightly darker footer */
+        }
+        .footer-link { color: #93c5fd; text-decoration: underline; margin: 0 0.5rem; }
+        .footer-link:hover { color: #e0f2fe; }
+
+        /* --- Utility --- */
+        .hidden { display: none; }
+
+    </style>
+</head>
+<body class="text-white">
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed top-0 left-0 w-64 h-full shadow-lg transform -translate-x-full transition-transform duration-300 z-40">
+        <div class="p-6 border-b border-blue-400 font-bold text-xl text-white">🎥 Menu</div>
+        <ul class="p-4 space-y-4 text-gray-200">
+            <li><a href="#movies" onclick="toggleSidebar()" class="hover:text-white">Movies</a></li>
+            <li><a href="#" class="hover:text-white">Short Videos</a></li>
+            <li><a href="#" class="hover:text-white">Full Movie Clips</a></li>
+            <li><a href="#" class="hover:text-white">Top Rated</a></li>
+            <li><a href="#" class="hover:text-white">Genres</a></li>
+            <li><a href="#adminSection" onclick="showAdminSection(); toggleSidebar();" class="hover:text-white">Admin Panel</a></li>
+        </ul>
+    </div>
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-30" onclick="toggleSidebar()"></div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-20 text-white p-4 sm:p-6 shadow-md flex items-center justify-between">
+        <button onclick="toggleSidebar()" class="text-white focus:outline-none p-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <h1 class="text-2xl sm:text-3xl font-bold text-center flex-1 blue-flame">🎬 Movie Shower</h1>
+        <div class="relative">
+            <span onclick="toggleSignIn()" class="cursor-pointer font-semibold text-white hover:text-gray-300 p-2">Sign In</span>
+            <div id="signInForm" class="absolute right-0 mt-2 bg-white text-black rounded shadow-lg p-4 hidden z-50">
+                <form onsubmit="submitSignInForm(event)" class="sign-in-form space-y-3">
+                    <div class="sign-in-header">Sign In</div>
+                    <input type="text" name="username" placeholder="Username" required />
+                    <select name="sex" required>
+                        <option value="" disabled selected>Select Sex</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <input type="email" name="email" placeholder="Email" required />
+                    <input type="tel" name="phone" placeholder="Phone Number" required />
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Category Buttons -->
+        <div class="category-buttons mt-6">
+            <div class="category-button active" onclick="setActiveCategory(this); filterByCategory('all')">All Movies</div>
+            <div class="category-button" onclick="setActiveCategory(this); filterByCategory('action')">Action</div>
+            <div class="category-button" onclick="setActiveCategory(this); filterByCategory('adventure')">Adventure</div>
+            <div class="category-button" onclick="setActiveCategory(this); filterByCategory('sci-fi')">Sci-Fi</div>
+            <div class="category-button" onclick="setActiveCategory(this); filterByCategory('comedy')">Comedy</div>
+            <div class="category-button" onclick="setActiveCategory(this); filterByCategory('drama')">Drama</div>
+            <div class="category-button" onclick="setActiveCategory(this); filterByCategory('horror')">Horror</div>
+            <div class="category-button" onclick="setActiveCategory(this); filterByCategory('thriller')">Thriller</div>
+            <div class="category-button" onclick="setActiveCategory(this); filterByCategory('animation')">Animation</div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar-container">
+            <input type="text" id="searchInput" placeholder="Search Movies..." class="search-bar" oninput="searchMovies()" />
+        </div>
+
+        <!-- Movies Section -->
+        <section id="movies" class="movies-section mx-auto max-w-screen-xl">
+            <h2 class="blue-flame">🎬 Available Movies</h2>
+            <div id="movieGrid">
+                <!-- Movie cards loaded by JS -->
+            </div>
+        </section>
+
+        <!-- Admin Section (Hidden by Default) -->
+        <section id="adminSection">
+             <button class="admin-close-button" onclick="hideAdminSection()" title="Close Admin Panel">×</button>
+             <h2 class="text-2xl font-bold text-center mb-6 text-white">🔑 Admin - Add Movie</h2>
+             <!-- **** FORM UPDATED **** -->
+            <form id="addMovieForm" class="admin-form">
+                <div>
+                    <label for="movieTitle">Movie Title:</label>
+                    <input type="text" id="movieTitle" name="movieTitle" placeholder="e.g., Inception" required>
+                </div>
+                <div>
+                    <label for="movieLink">Watch Link (YouTube/Other):</label>
+                    <input type="url" id="movieLink" name="movieLink" placeholder="https://www.youtube.com/watch?v=..." required>
+                </div>
+                <div>
+                    <label for="movieCategory">Category:</label>
+                    <select id="movieCategory" name="movieCategory" required>
+                        <option value="" disabled selected>Select Category</option>
+                        <option value="action">Action</option>
+                        <option value="adventure">Adventure</option>
+                        <option value="sci-fi">Sci-Fi</option>
+                        <option value="comedy">Comedy</option>
+                        <option value="drama">Drama</option>
+                        <option value="horror">Horror</option>
+                        <option value="thriller">Thriller</option>
+                        <option value="animation">Animation</option>
+                        <option value="fantasy">Fantasy</option>
+                        <option value="romance">Romance</option>
+                        <option value="mystery">Mystery</option>
+                    </select>
+                </div>
+
+                <!-- **** MOVED AND UPDATED FILE Input **** -->
+                <div>
+                    <label for="movieImageFile">Choose Movie Poster:</label>
+                    <input type="file" id="movieImageFile" name="movieImageFile" accept="image/*" required>
+                    <p class="text-xs text-gray-400 mt-1">Image will be stored directly. Use reasonably sized images.</p>
+                </div>
+                <!-- **** END FILE Input **** -->
+
+                <button type="submit">Add Movie to List</button>
+            </form>
+             <!-- **** END FORM **** -->
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-sm p-4">
+        © 2025 Movie Shower. All rights reserved. <br>
+        CONTACT US ON: 0770998019 / 0761152892 <br>
+        <!-- Link to Toggle Admin Panel -->
+        <a href="#adminSection" onclick="showAdminSection()" class="footer-link mt-2 inline-block">Admin Panel</a>
+    </footer>
+
+    <script>
+        // --- Initial Hardcoded Movies ---
+        // 'image' now holds URL for initial movies. Uploaded movies will store Base64 here.
+        const initialMovies = [
+             { title: "Avatar: The Way of Water", image: "https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg", link: "https://www.youtube.com/watch?v=d9MyW72ELq0", category: "sci-fi" },
+             { title: "Guardians of the Galaxy Vol. 3", image: "https://image.tmdb.org/t/p/w500/r2J02Z2OpNTctfOSN1Ydgii51Iq.jpg", link: "https://www.youtube.com/watch?v=u3V5KDHRQvk", category: "comedy" },
+             { title: "The Flash", image: "https://image.tmdb.org/t/p/w500/rktDFPbfHfUbArZ6OOOKsXcv0Bm.jpg", link: "https://www.youtube.com/watch?v=hebWYacbdvc", category: "action" },
+            // Add others if needed...
+        ];
+
+        let allMovies = []; // Global array for all movies
+
+        // --- Core Movie Handling ---
+
+        function loadMovies() {
+            let storedMovies = [];
+            try {
+                const storedData = localStorage.getItem('movies');
+                if (storedData) {
+                    storedMovies = JSON.parse(storedData);
+                    if (!Array.isArray(storedMovies)) {
+                        console.warn("Stored movie data is not an array, resetting.");
+                        storedMovies = [];
+                        localStorage.removeItem('movies');
+                    }
+                     // Basic validation of stored movie object structure
+                     // Now 'image' can be a URL or Base64, so check it exists
+                    storedMovies = storedMovies.filter(movie =>
+                        movie && typeof movie === 'object' && movie.title && movie.image && movie.link && movie.category
+                     );
+                }
+            } catch (e) {
+                console.error("Error parsing movies from localStorage:", e);
+                storedMovies = [];
+                localStorage.removeItem('movies');
+            }
+             // Combine initial movies (with URL images) and stored movies (likely Base64 images)
+             const combined = [...initialMovies, ...storedMovies];
+             const uniqueMoviesMap = new Map();
+             combined.forEach(movie => {
+                const key = `${movie.title}-${movie.link}`;
+                if (!uniqueMoviesMap.has(key)) {
+                    uniqueMoviesMap.set(key, movie); // Keep the whole movie object
+                }
+             });
+             allMovies = Array.from(uniqueMoviesMap.values());
+        }
+
+        function displayMovies(moviesToDisplay) {
+            const movieGrid = document.getElementById('movieGrid');
+            movieGrid.innerHTML = '';
+
+            if (!moviesToDisplay || moviesToDisplay.length === 0) {
+                movieGrid.innerHTML = '<p class="text-center text-gray-300 col-span-full py-10">No movies found matching your criteria.</p>';
+                return;
+            }
+
+            moviesToDisplay.forEach(movie => {
+                 // Check required fields
+                if (!movie || !movie.title || !movie.image || !movie.link || !movie.category) {
+                    console.warn("Skipping movie card due to incomplete data:", movie);
+                    return;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                card.setAttribute('data-category', movie.category.toLowerCase().trim());
+
+                const img = document.createElement('img');
+                // img.src works for both standard URLs and Base64 Data URLs
+                img.src = movie.image;
+                img.alt = movie.title;
+                img.loading = 'lazy'; // Add lazy loading for potentially large images
+                img.onerror = function() {
+                    this.onerror = null;
+                    this.src = 'https://via.placeholder.com/300x450/1e3a8a/ffffff?text=Image+Not+Found';
+                    this.alt = 'Image Not Found';
+                };
+
+                const title = document.createElement('h3');
+                title.className = 'movie-title';
+                title.textContent = movie.title;
+
+                const link = document.createElement('a');
+                link.href = movie.link;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = 'Watch Now';
+
+                card.appendChild(img);
+                card.appendChild(title);
+                card.appendChild(link);
+                movieGrid.appendChild(card);
+            });
+        }
+
+        // --- Filtering and Searching --- (No changes needed here)
+        function filterByCategory(category) {
+            category = category.toLowerCase().trim();
+            const filteredMovies = category === 'all'
+                ? allMovies
+                : allMovies.filter(movie => movie.category.toLowerCase() === category);
+            displayMovies(filteredMovies);
+            document.getElementById('searchInput').value = '';
+        }
+        function searchMovies() {
+            const input = document.getElementById('searchInput').value.toLowerCase().trim();
+            const activeButton = document.querySelector('.category-button.active');
+            const activeCategory = activeButton ? activeButton.getAttribute('onclick').match(/filterByCategory\('([^']+)'\)/)[1].toLowerCase() : 'all';
+
+            let moviesToSearch = allMovies;
+            if (activeCategory !== 'all') {
+                moviesToSearch = allMovies.filter(movie => movie.category.toLowerCase() === activeCategory);
+            }
+
+            const filteredMovies = moviesToSearch.filter(movie =>
+                movie.title.toLowerCase().includes(input)
+            );
+            displayMovies(filteredMovies);
+        }
+        function setActiveCategory(buttonElement) {
+            document.querySelectorAll('.category-button').forEach(btn => btn.classList.remove('active'));
+            buttonElement.classList.add('active');
+        }
+
+        // --- UI Toggles --- (No changes needed here)
+        function toggleSidebar() { /* ... */ }
+        function toggleSignIn() { /* ... */ }
+        function showAdminSection() { document.getElementById('adminSection').style.display = 'block'; document.getElementById('adminSection').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        function hideAdminSection() { document.getElementById('adminSection').style.display = 'none'; }
+
+        // --- Form Submissions ---
+        function submitSignInForm(event) { /* ... */ }
+
+
+        // **** START: UPDATED Add Movie Form Handler ****
+        document.getElementById('addMovieForm').addEventListener('submit', async function(event) { // Make the handler async
+            event.preventDefault();
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Adding...';
+
+            const title = document.getElementById('movieTitle').value.trim();
+            const link = document.getElementById('movieLink').value.trim();
+            const category = document.getElementById('movieCategory').value;
+            // Get the file from the updated input ID
+            const imageFile = document.getElementById('movieImageFile').files[0];
+
+            // Input validation
+            if (!title || !link || !category || !imageFile) { // Check if file was selected
+                 alert("Please fill in all movie details and choose a poster image.");
+                 submitButton.disabled = false;
+                 submitButton.textContent = 'Add Movie to List';
+                 return;
+             }
+
+            let imageDataUrl = ""; // Initialize image data
+
+            // --- Read the image file ---
+            try {
+                imageDataUrl = await readFileAsDataURL(imageFile);
+                // Optional: Size check (example: limit to 2MB)
+                 const maxSizeMB = 2;
+                 if (imageDataUrl.length > maxSizeMB * 1024 * 1024 * 1.37) { // Approx Base64 size
+                    alert(`Image file is too large (over ${maxSizeMB}MB). Please choose a smaller file.`);
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Add Movie to List';
+                    return;
+                }
+            } catch (error) {
+                console.error("Error reading image file:", error);
+                alert("Could not read the selected image file. Please try again or choose a different file.");
+                submitButton.disabled = false;
+                submitButton.textContent = 'Add Movie to List';
+                return;
+            }
+            // --- End file reading ---
+
+
+            // Create the movie object, using 'image' property for the Base64 Data URL
+            const newMovie = {
+                title: title,
+                link: link,
+                category: category,
+                image: imageDataUrl // Store Base64 data in the 'image' property
+            };
+
+            // --- Save to localStorage ---
+             let currentStoredMovies = [];
+             try {
+                 const storedData = localStorage.getItem('movies');
+                 if (storedData) {
+                     currentStoredMovies = JSON.parse(storedData);
+                     if (!Array.isArray(currentStoredMovies)) currentStoredMovies = [];
+                     currentStoredMovies = currentStoredMovies.filter(m => m && m.title && m.link);
+                 }
+             } catch (e) {
+                 console.error("Error reading movies from localStorage before adding:", e);
+                 currentStoredMovies = [];
+             }
+
+             currentStoredMovies.push(newMovie);
+
+            try {
+                localStorage.setItem('movies', JSON.stringify(currentStoredMovies));
+
+                loadMovies(); // Refresh the global `allMovies` array
+                filterByCategory('all'); // Reset display
+                setActiveCategory(document.querySelector('.category-button')); // Highlight 'All'
+
+                alert('Movie added successfully!');
+                document.getElementById('addMovieForm').reset(); // Clear the form
+                hideAdminSection(); // Close the admin panel
+
+            } catch (storageError) {
+                console.error("Error saving movie to localStorage:", storageError);
+                 if (storageError.name === 'QuotaExceededError') {
+                    alert("Error saving movie: LocalStorage quota exceeded. Cannot save more data. Try using smaller images.");
+                 } else {
+                    alert("Error saving movie. LocalStorage might be full or unavailable.");
+                 }
+            } finally {
+                 submitButton.disabled = false;
+                 submitButton.textContent = 'Add Movie to List';
+            }
+        });
+
+        // Helper function to read file as Data URL using Promises (no change needed)
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+        // **** END: UPDATED Add Movie Form Handler ****
+
+
+        // --- Initial Page Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMovies();
+            displayMovies(allMovies);
+            hideAdminSection();
+        });
+
+    </script>
+</body>
+</html>
